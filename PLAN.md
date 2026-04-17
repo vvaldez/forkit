@@ -28,14 +28,12 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 ## Phase 2: Core offline UX
 
-- [x] **Build real bundled DB** — 598 recipes, 6,332 ingredient lines; all 4 buckets non-zero (Breakfast 15, Lunch 99, Dinner 291, Snacks 193); `BUNDLED_CONTENT_VERSION = '1.0.0'`.
+- [x] **Build real bundled DB** — 598 recipes, 6,332 ingredient lines; all 4 buckets non-zero (Breakfast 15, Lunch 99, Dinner 291, Snacks 193); `BUNDLED_CONTENT_VERSION = '1.0.1'`.
 - [x] DoorDash-style **browse** (themes / cards) backed by bundled data.
 - [x] **Search** (local-first) + **random discovery** from bundled DB.
 - [x] **Favorites** and **custom recipe** CRUD in user DB.
-- [ ] **Ingredient validation** path (USDA when online; soft warnings offline).
 - [x] **Full-screen meal detail** (ingredients, instructions, video link).
-- [ ] Implement **email magic-link auth** and session restore for v1 sharing roadmap.
-- [ ] Implement **household invite/create/join** flow as the access boundary for shared data.
+- [ ] **Ingredient validation** path (USDA when online; soft warnings offline) — deferred; not required for core offline UX.
 
 ---
 
@@ -58,6 +56,8 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 ## Phase 5: Menu & household sync
 
 - [ ] **Household menu** view (tonight, recent, leftovers, queue)—per `SPEC.md` and `ux-screens.md`.
+- [ ] **Email magic-link auth** and session restore (moved from Phase 2 — only meaningful once sync exists).
+- [ ] **Household invite/create/join** flow as the access boundary for shared data (moved from Phase 2).
 - [ ] **Settings — sync setup:** Supabase URL + anon key entry (user-supplied project); connection validation; session/household status display; invite controls. Secure key storage per `SECURITY.md`; never committed.
 - [ ] Implement **Supabase sync path** per `sync-protocol.md` (user-supplied project, async pull/push, outbox retry); optional adapter support later.
 - [ ] **Merged household state** for cart / grocery where spec requires attribution after sync.

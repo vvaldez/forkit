@@ -4,6 +4,7 @@
 
 - **Be explicit:** state intent clearly—in names, docs, plans, and configuration—so the next reader (human or agent) does not have to guess.
 - **Be efficient:** avoid redundant work and duplicate sources of truth (the same value in two files, two docs, or two parallel processes). Prefer one canonical place and wire consumers to it.
+- **Be observable:** every async boundary, error path, and background operation must emit a `console.error` / `console.warn` / `console.log` so that nothing fails silently. Unknown activity without a log entry is a bug. Catch blocks must always log the error before swallowing or rethrowing it.
 
 This extends step 1 below: research should reduce duplicated effort, not repeat it.
 
@@ -29,4 +30,6 @@ For each milestone, follow these steps in order:
 6. **Test:** Add automated tests (e.g. unit or integration) for new behavior and run the full test suite to catch regressions.
 7. **Review & verify:** When implementation and tests are done, tell the project owner so they can run the app, manually verify, and give feedback.
 8. **Mark as done:** After they confirm they are satisfied, mark the milestone complete in `PLAN.md`.
-9. **Commit:** Stage all milestone changes and create a single descriptive commit. If multiple commits were made during implementation, squash them into one commit per milestone before moving on.
+9. **Branch:** Create a feature branch before any commits — never commit directly to `main` or `master`. Name it after the phase or feature (e.g. `phase/1-data-layer`, `feat/search-screen`, `fix/migration-runner`).
+10. **Commit:** Stage all milestone changes and create a single descriptive commit on the feature branch. If multiple commits were made during implementation, squash them into one commit per milestone before opening a PR.
+11. **Pull request:** Open a PR from the feature branch into `main`/`master`. The PR title should match the milestone. Do not merge or push to `main` directly — the project owner merges.
