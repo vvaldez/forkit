@@ -13,6 +13,8 @@ Application source is maintained in a **separate private repository** (`forkit-s
 | [`SOP.md`](./SOP.md) | How we run each milestone end to end |
 | [`ESR.md`](./ESR.md) | Smart-question habits for support and bugs |
 | [`AGENTS.md`](./AGENTS.md) | AI / contributor workflow for this docs repo |
-| [`GEMINI.md`](./GEMINI.md) | Gemini-specific project notes |
+| [`priorities.md`](./priorities.md) | Weighted decision framework for architecture/feature tradeoffs |
+
+**Companion specs (mobile architecture — Phase 0):** [`schema.md`](./schema.md), [`ux-screens.md`](./ux-screens.md), [`api-integration.md`](./api-integration.md), [`sync-protocol.md`](./sync-protocol.md), [`recipe-sources.md`](./recipe-sources.md). Listed in [`SPEC.md` § Companion specifications](./SPEC.md#companion-specifications). Umbrella security rules: [`../SECURITY.md`](../SECURITY.md).
 
 License: see [`LICENSE`](./LICENSE) (GPL-3.0).
