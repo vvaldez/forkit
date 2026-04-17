@@ -9,11 +9,13 @@ This extends step 1 below: research should reduce duplicated effort, not repeat 
 
 ## Development environment
 
-- **Dev machine:** Windows (PowerShell)
-- **Mobile testing:** iPhone on the same LAN (access via the dev machine's local IP, e.g. `192.168.86.x:3000`)
-- **Target deployment:** Publicly hosted (Vercel or equivalent) so the app is reachable beyond the local network
+- **Dev machine:** Windows (PowerShell) is common for this project; mobile toolchains may also use macOS for iOS builds (store submission, simulators).
+- **Mobile testing:** Physical devices and emulators/simulators for **iOS** and **Android**; network toggles for offline-first behavior.
+- **Target delivery:** **App Store and Google Play** (or equivalent distribution) for the **native mobile** app described in [`SPEC.md`](./SPEC.md). There is **no** requirement for a publicly hosted web app operated by the author; optional **user-configured** sync backends (Firebase, Supabase, self-hosted REST) are documented in companion specs, not implied to be hosted by the ForkIt maintainer.
 
-Keep these constraints in mind when choosing tools, writing scripts, and configuring servers. Anything that only works on Unix or only on localhost should be flagged.
+The **legacy** Next.js + Vercel prototype used LAN + public web hosting for testing; see [`PLAN-legacy-web.md`](./PLAN-legacy-web.md) if you still maintain that archive.
+
+Keep these constraints in mind when choosing tools, writing scripts, and configuring build pipelines. Anything that only works on one OS without a documented alternative should be flagged.
 
 ## Milestone workflow
 
