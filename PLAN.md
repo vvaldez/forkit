@@ -39,9 +39,11 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 ## Phase 3: Cart, grocery list, savings
 
-- [ ] **Cart** with native-friendly patterns (tab bar, floating summary).
-- [ ] **Checkout → grocery list** (combined + by-meal views).
-- [ ] **Savings estimate** + **lifetime savings** in user DB.
+- [x] **Cart** with native-friendly patterns (tab bar badge, Add to Cart on MealDetail + ghost "+" on Browse/Search cards, inline stepper).
+- [x] **Checkout → grocery list** (combined + by-meal segmented views, local checkbox state).
+- [x] **Savings estimate** + **lifetime savings** in user DB (`savings_totals` upsert, checkout snapshot in `checkout_events.payload_json`).
+- [x] Migration 002: `UNIQUE INDEX` on `cart_lines(source, recipe_key, COALESCE(member_id,''))` + `checkout_events` index.
+- [x] `cart_lines.member_id` column retained for Phase 5 group cart (NULL = single-user; no Phase 3 behaviour change).
 
 ---
 
@@ -60,6 +62,8 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 - [ ] **Household invite/create/join** flow as the access boundary for shared data (moved from Phase 2).
 - [ ] **Settings — sync setup:** Supabase URL + anon key entry (user-supplied project); connection validation; session/household status display; invite controls. Secure key storage per `SECURITY.md`; never committed.
 - [ ] Implement **Supabase sync path** per `sync-protocol.md` (user-supplied project, async pull/push, outbox retry); optional adapter support later.
+- [ ] **Group cart (DoorDash-style):** activate `cart_lines.member_id` per household member so every member's additions are visible in a shared cart view. Architecture is already in place from Phase 3 (column exists, unique index uses `COALESCE(member_id,'')`). Phase 5 wires the household identity into `upsertCartLine` and surfaces per-member attribution in the Cart tab.
+- [ ] **Ingredient-efficiency recommendations:** when multiple meals share overlapping ingredients, surface a "smart pick" hint in the cart (e.g. "Adding Chicken Handi uses the same rice you already need for Biryani"). Requires an ingredient-similarity scoring pass over the current cart at checkout time. Design: simple ingredient-word overlap score ranked by saved ingredient count, displayed as a collapsible hint card in the Cart screen.
 - [ ] **Merged household state** for cart / grocery where spec requires attribution after sync.
 
 ---
