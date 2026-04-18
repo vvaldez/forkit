@@ -49,9 +49,35 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 ## Phase 4: Questionnaire & variety
 
-- [ ] ForkIt **Surprise me / Ask me** entry and **questionnaire** flow per Feature 1.4 in `SPEC.md`.
-- [ ] **Cooking history** (“I made this”) driving **7-day exclusion** and quiz behavior.
-- [ ] **Leftovers** surface + settings (window, dismissals).
+### Decisions locked
+
+| Decision | Choice |
+|----------|--------|
+| Migration 003 | Add `source TEXT` + `recipe_key TEXT` (nullable) to `leftovers` table — required for chip → MealDetail navigation |
+| “I'm making this” placement | Below cart stepper, above YouTube button on MealDetail; amber/green color (not brand red) |
+| “I'm making this” state | Becomes muted “Cooked today” chip after tap; disabled (not hidden) if already logged within 4 hrs; no undo |
+| YouTube intercept | Bottom sheet once per `(source, recipe_key)` — “Yes, I'm making this” / “Just watching”; auto-log on subsequent taps; key stored in `app_kv` |
+| Double-log guard | Skip `meal_history` insert if a row exists for same recipe within last 4 hours |
+| Leftover expiry | Default 3 days, range 1–7, stored in `app_kv` as `leftover_expiry_days`; adjustable in Settings (Phase 6 surface) |
+| Leftovers card in Browse | Full-width, first item in `listData` as `type: 'leftovers'`; warm yellow `#FFF3CD`; max 5 chips with “+N more” overflow; `useFocusEffect` refresh |
+| Questionnaire entry | **5th “Discover” tab** (not a FAB) — equal billing, one-tap access to Surprise me, natural hook for leftover → questionnaire pre-filter in Phase 5 |
+| Questionnaire questions | 4 questions: **Meal time → Cuisine → Dietary preference → Cook time** |
+| Cook time buckets | Quick (<30 min) · Medium (30–60 min) · I've got time (60+ min) · Surprise me |
+| Cuisine options | Loaded dynamically: `SELECT DISTINCT cuisine_area FROM recipes` — never hardcoded |
+| Dietary options | Loaded dynamically from `dietary_tags` values in bundled DB |
+| Zero-results relaxation order | Cook time → Dietary → Cuisine → Meal time → any non-recently-cooked; each relaxation shows inline message |
+| Questionnaire state | Passed via stack params `{ step, answers }` — no context, no cleanup needed |
+| 7-day exclusion | Recipes in `meal_history` within last 7 days excluded from Surprise me and questionnaire results |
+| Build order | Migration 003 → “I'm making this” → Leftovers in Browse → Discover tab + Questionnaire |
+
+### Tasks
+
+- [ ] **Migration 003** — add `source TEXT` + `recipe_key TEXT` to `leftovers`; nullable to avoid breaking existing rows.
+- [ ] **”I'm making this”** on MealDetail — logs `meal_history` + `leftovers` in one tap; YouTube intercept bottom sheet; `app_kv` auto-log preference; double-log guard.
+- [ ] **Leftovers card** in Browse — `useFocusEffect` query, dismissible chips, full-width banner above bucket sections.
+- [ ] **Discover tab** — 5th bottom tab; home screen with “Surprise me” + “Ask me” tiles.
+- [ ] **Questionnaire flow** — 4-question one-per-screen flow; dynamic option loading; zero-results relaxation with inline messaging; result screen with “Cook this” + “Show me another”.
+- [ ] **`leftover_expiry_days` setting** — written to `app_kv` on first use (default 3); Settings screen exposes 1–7 slider in Phase 6.
 
 ---
 
@@ -81,4 +107,6 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 - [ ] **Realtime collaboration** on top of synced documents (Firestore listeners, Supabase Realtime, or self-hosted WS)—see `SPEC.md` household section.
 - [ ] **Google Sheets → import** pipeline for custom recipes (post-v1).
+- [ ] **"What can I make with this ingredient?"** (medium priority) — reverse ingredient lookup: tap any ingredient on GroceryList or MealDetail to see all recipes it appears in. Requires an ingredient → recipe index, either at ETL time or via `ingredients_text LIKE` query at runtime.
+- [ ] **Past grocery lists / order history** — access previous `checkout_events` snapshots from a history screen; data already exists, just needs UI.
 - [ ] Features marked **proposed** in `SPEC.md` (weekly planner, budget themes, share sheet enhancements, skill tags).
