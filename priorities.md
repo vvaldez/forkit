@@ -27,6 +27,16 @@ Weights sum to **1.00**.
 | Delivery speed (Rule #2) | 0.04 | Keeps iteration velocity healthy without violating safety. |
 | Simplicity and reuse (Rule #3) | 0.02 | Favors fewer moving parts and reuse of proven patterns. |
 
+## Core product tenets
+
+These are non-negotiable design principles applied across all feature decisions:
+
+1. **Cook more, order less.** Every feature must make cooking at home easier, faster, or more satisfying than ordering delivery. Savings tracking, quick-cook filters, and leftover management all serve this mission.
+2. **Healthy eating as a default nudge.** The app should make the healthy choice the easy choice — "Healthy" is a top-level filter pill, not buried in settings. Surface lighter, whole-food options prominently. Never encourage over-ordering or portion inflation.
+3. **Offline first, always.** Core features work with zero network. No paywall behind basic functionality.
+4. **Household, not solo.** Design for 2+ people sharing meals; personalization (Your Usuals, leftovers) informs a household, not just an individual.
+5. **Respect the cook's time.** Quick paths first. "Tonight in 30" before "Worth the Wait". Reduce decision fatigue, don't add to it.
+
 ## Scoring method
 
 For each option:
