@@ -94,9 +94,41 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 ---
 
-## Phase 6: Polish, export, release
+## Phase 6: Community recipes, polish, release
 
+### Community recipes (new in Phase 6)
+
+Architecture decisions locked by planning review (2026-04-18):
+
+- **Storage:** Author-operated shared Supabase project (`community_recipes` table). Not user-supplied Supabase — community is multi-tenant by definition.
+- **Publish flow:** Instant publish from any `user_recipes` row via "Share to Community" button. Reactive moderation: flag column + threshold-based hiding. No pre-review queue.
+- **Consumption:** New "Community" section in Browse. App queries Supabase, caches in `community_recipe_cache` table in user DB (24-hour TTL). Offline: shows last cache with staleness banner.
+- **Saving:** User taps "Save to My Recipes" → inserts copy into `user_recipes` with `published_community_id` back-reference. Source stays `'custom'` to avoid touching every `source IN (...)` check.
+- **Attribution:** `author_user_id` + `author_display_name` (denormalized at publish). Author can edit/delete until another user has saved it; after that, "Withdraw" hides it from community but leaves saved copies intact.
+- **Resilience:** GitHub Actions weekly cron exports `community_recipes` to `forkit/community-recipes-export.json`. Format = CSV import format so the existing CSV importer can ingest it with no new code. If Supabase unreachable >30 days, show one-time Settings banner. This is the fork/handoff artifact.
+
+Schema additions needed before Phase 6 starts:
+- User DB: add `published_community_id TEXT NULL` + `author_display_name TEXT NULL` to `user_recipes` (add in Phase 5b migration)
+- User DB: add `community_recipe_cache` table (Phase 6)
+- User DB: add `user_recipe_tags (recipe_id, bucket_slug)` table (Phase 5b migration — needed for custom recipe bucket membership)
+
+### Kitchen bucket metadata (do before next bundled DB rebuild)
+
+Current Browse hardcodes bucket rules as SQL WHERE clauses in TypeScript. Planned move to data-driven:
+
+- **Bundled DB:** Add `recipe_tag_rules (bucket_slug PK, display_name, rule_sql, sort_order)` and `recipe_bucket_membership (recipe_id, bucket_slug)` tables. ETL evaluates rules at build time and materializes memberships. Browse queries `JOIN recipe_bucket_membership` instead of inline WHERE.
+- **OTA sidecar:** `assets/recipe_tag_overrides.json` — map of `recipe_id → [bucket_slug]`. Loader on app start applies to a `recipe_tag_overrides` table in user DB. Allows bucket additions via Expo OTA without an app store release.
+- **Community/custom recipes:** Author picks buckets at publish/create time from the canonical slug vocabulary. Stored in `user_recipe_tags`.
+- **Adding a new bucket:** (1) Add row to `recipe_tag_rules` seed, (2) rebuild bundled DB, (3) optionally backfill via OTA sidecar before release.
+
+### Phase 6 checklist
 - [ ] **CSV export** from Settings per `SPEC.md`.
+- [ ] **Community Supabase table** + Share to Community button on `user_recipes`
+- [ ] **Community browse section** in Browse tab + `community_recipe_cache` user DB table
+- [ ] **GitHub Actions weekly export** cron → `community-recipes-export.json`
+- [ ] **`recipe_tag_rules` + `recipe_bucket_membership`** in bundled DB + ETL update
+- [ ] **OTA sidecar loader** (`recipe_tag_overrides.json`)
+- [ ] **`user_recipe_tags`** table (if not already in Phase 5b migration)
 - [ ] Store listing assets, privacy policy, crash/analytics choices.
 - [ ] **Test matrix** (offline flights, sync conflict spot checks, API rate-limit behavior).
 - [ ] **App Store / Play** submission (owner-driven).
@@ -105,6 +137,8 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 ## Future (non-blocking)
 
+- [ ] **Browse pill customization in Settings** — let users reorder or swap the 6 browse filter pills (Quick, Healthy, Comfort, Meatless, Global, Low Carb) for personal preference. Store order/selection in `app_kv`. Defer until Settings screen exists (Phase 5b). See `priorities.md` core tenets: Healthy is always a default pill and cannot be removed.
+- [ ] **Editorial "Kitchen" buckets (Browse Option D)** — curated collections that map multiple cuisine+category combinations into hero cards with editorial descriptions (e.g. "Quick Weeknight", "Comfort Food"); fold in once recipe volume increases or Spoonacular tags enable richer filtering. Pill accuracy for "Healthy" and "Low Carb" also improves with Spoonacular `healthScore`/carb enrichment — plan that pass before promoting these pills as accurate.
 - [ ] **Realtime collaboration** on top of synced documents (Firestore listeners, Supabase Realtime, or self-hosted WS)—see `SPEC.md` household section.
 - [ ] **Google Sheets → import** pipeline for custom recipes (post-v1).
 - [ ] **"What can I make with this ingredient?"** (medium priority) — reverse ingredient lookup: tap any ingredient on GroceryList or MealDetail to see all recipes it appears in. Requires an ingredient → recipe index, either at ETL time or via `ingredients_text LIKE` query at runtime.
