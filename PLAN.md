@@ -72,25 +72,37 @@ Author the documents listed in [`SPEC.md` § Companion specifications](./SPEC.md
 
 ### Tasks
 
-- [ ] **Migration 003** — add `source TEXT` + `recipe_key TEXT` to `leftovers`; nullable to avoid breaking existing rows.
-- [ ] **”I'm making this”** on MealDetail — logs `meal_history` + `leftovers` in one tap; YouTube intercept bottom sheet; `app_kv` auto-log preference; double-log guard.
-- [ ] **Leftovers card** in Browse — `useFocusEffect` query, dismissible chips, full-width banner above bucket sections.
-- [ ] **Discover tab** — 5th bottom tab; home screen with “Surprise me” + “Ask me” tiles.
-- [ ] **Questionnaire flow** — 4-question one-per-screen flow; dynamic option loading; zero-results relaxation with inline messaging; result screen with “Cook this” + “Show me another”.
-- [ ] **`leftover_expiry_days` setting** — written to `app_kv` on first use (default 3); Settings screen exposes 1–7 slider in Phase 6.
+- [x] **Migration 003** — add `source TEXT` + `recipe_key TEXT` to `leftovers`; nullable to avoid breaking existing rows.
+- [x] **”I'm making this”** on MealDetail — logs `meal_history` + `leftovers` in one tap; YouTube intercept bottom sheet; `app_kv` auto-log preference; double-log guard.
+- [x] **Leftovers card** in Browse — `useFocusEffect` query, dismissible chips, full-width banner above bucket sections.
+- [ ] **Discover tab** — `DiscoverScreen.tsx` exists but not wired into tab navigator; carry to Phase 7.
+- [x] **Questionnaire flow** — 4-question one-per-screen flow; dynamic option loading; zero-results relaxation with inline messaging; result screen with filter chips + “Try different filters” CTA.
+- [x] **`leftover_expiry_days` setting** — written to `app_kv` on first use (default 3); Settings screen exposes 1–7 stepper.
 
 ---
 
 ## Phase 5: Menu & household sync
 
-- [ ] **Household menu** view (tonight, recent, leftovers, queue)—per `SPEC.md` and `ux-screens.md`.
-- [ ] **Email magic-link auth** and session restore (moved from Phase 2 — only meaningful once sync exists).
-- [ ] **Household invite/create/join** flow as the access boundary for shared data (moved from Phase 2).
-- [ ] **Settings — sync setup:** Supabase URL + anon key entry (user-supplied project); connection validation; session/household status display; invite controls. Secure key storage per `SECURITY.md`; never committed.
-- [ ] Implement **Supabase sync path** per `sync-protocol.md` (user-supplied project, async pull/push, outbox retry); optional adapter support later.
-- [ ] **Group cart (DoorDash-style):** activate `cart_lines.member_id` per household member so every member's additions are visible in a shared cart view. Architecture is already in place from Phase 3 (column exists, unique index uses `COALESCE(member_id,'')`). Phase 5 wires the household identity into `upsertCartLine` and surfaces per-member attribution in the Cart tab.
-- [ ] **Ingredient-efficiency recommendations:** when multiple meals share overlapping ingredients, surface a "smart pick" hint in the cart (e.g. "Adding Chicken Handi uses the same rice you already need for Biryani"). Requires an ingredient-similarity scoring pass over the current cart at checkout time. Design: simple ingredient-word overlap score ranked by saved ingredient count, displayed as a collapsible hint card in the Cart screen.
-- [ ] **Merged household state** for cart / grocery where spec requires attribution after sync.
+> **Phase 5a and 5b are complete and merged.** Original Phase 5 scope was split: 5a = offline features (no backend), 5b = auth-only (no sync). Full household sync moved to Phase 8.
+
+### Phase 5a — complete ✓
+- [x] **Migration 004** — `household_members` table (sync-ready schema), soft-delete columns (`is_deleted`) on favorites, meal_history, leftovers, cart_lines, user_recipes; `sync_outbox` table.
+- [x] **Migration 005** — `saved_recipe_snapshots` table; `upsertSnapshot`/`getSnapshot` helpers; 4-tier `resolveRecipe` waterfall (custom → live → snapshot → warn).
+- [x] **Household menu** (`HomeScreen`) — tonight, recent meals, active leftovers, cart queue.
+- [x] **Ingredient-efficiency hint card** on CartScreen — word-overlap scoring, dismissible, persisted in `app_kv`.
+- [x] **Browse editorial buckets** — DoorDash-style pill filters + 6 horizontal bucket rows + cuisine grid → `CuisineDetailScreen`.
+
+### Phase 5b — complete ✓
+- [x] **Migration 006** — `sync_device`, `user_recipe_tags` tables; `published_community_id` + `author_display_name` on `user_recipes` (Phase 6 prep).
+- [x] **Email OTP auth** — `AuthContext` with Supabase client, `expo-secure-store` session persistence, `sendOtp`/`verifyOtp`/`signOut`.
+- [x] **SettingsScreen** — sign-in (email → 8-digit OTP), leftover expiry stepper (app_kv), sync coming-soon placeholder.
+- [x] **Gear icon** in Browse + Home headers → Settings.
+- [x] **app.json** — `scheme: "forkit"`, `expo-secure-store` plugin.
+
+### Deferred to Phase 8
+- [ ] **Household invite/create/join** flow
+- [ ] **Supabase sync path** (outbox push/pull, conflict resolution)
+- [ ] **Group cart** — wire `cart_lines.member_id` per household member
 
 ---
 
@@ -122,14 +134,15 @@ Current Browse hardcodes bucket rules as SQL WHERE clauses in TypeScript. Planne
 - **Adding a new bucket:** (1) Add row to `recipe_tag_rules` seed, (2) rebuild bundled DB, (3) optionally backfill via OTA sidecar before release.
 
 ### Phase 6 checklist
-- [ ] **CSV export** from Settings per `SPEC.md`.
-- [ ] **Community Supabase table** + Share to Community button on `user_recipes`
-- [ ] **Community browse section** in Browse tab + `community_recipe_cache` user DB table
-- [ ] **GitHub Actions weekly export** cron → `community-recipes-export.json`
-- [ ] **`recipe_tag_rules` + `recipe_bucket_membership`** in bundled DB + ETL update
-- [ ] **OTA sidecar loader** (`recipe_tag_overrides.json`)
-- [ ] **`user_recipe_tags`** table (if not already in Phase 5b migration)
-- [ ] Store listing assets, privacy policy, crash/analytics choices.
+- [x] **CSV export** from Settings per `SPEC.md`.
+- [x] **Community Supabase table** + Share to Community button on MealDetail + CustomRecipeForm
+- [x] **Community browse section** in Browse tab + `community_recipe_cache` user DB table (migration 007)
+- [x] **GitHub Actions weekly export** cron → `community-recipes-export.json` + `scripts/export-community-recipes.js`
+- [ ] **`recipe_tag_rules` + `recipe_bucket_membership`** in bundled DB + ETL update — deferred to Phase 7
+- [ ] **OTA sidecar loader** (`recipe_tag_overrides.json`) — deferred to Phase 7
+- [x] **`user_recipe_tags`** table — shipped in migration 006
+- [x] **Privacy policy** — `forkit/privacy-policy.md`; app.json bundle IDs added (`com.forkit.mobile`)
+- [ ] Store listing assets (icon, screenshots, description) — owner-driven
 - [ ] **Test matrix** (offline flights, sync conflict spot checks, API rate-limit behavior).
 - [ ] **App Store / Play** submission (owner-driven).
 

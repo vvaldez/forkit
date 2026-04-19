@@ -98,6 +98,8 @@ Key-value preferences (string payloads, often JSON).
 | `source` | TEXT NOT NULL | `bundled` \| `api` \| `custom`. |
 | `recipe_key` | TEXT NOT NULL | External id or `user_recipes.id`. |
 | `saved_at` | INTEGER NOT NULL | |
+| `updated_at` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; required for sync LWW. |
+| `is_deleted` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; soft-delete for sync. |
 | **UNIQUE** | (`source`, `recipe_key`) | |
 
 **Index:** `saved_at` for “recent favorites” if needed.
@@ -120,6 +122,9 @@ Custom recipes (`source = custom`).
 | `notes` | TEXT NULL | |
 | `created_at` | INTEGER NOT NULL | |
 | `updated_at` | INTEGER NOT NULL | |
+| `is_deleted` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; soft-delete for sync. |
+| `published_community_id` | TEXT NULL | Added migration 006; UUID of remote `community_recipes` row if shared. |
+| `author_display_name` | TEXT NULL | Added migration 006; denormalized author label set at publish time. |
 
 ### Table: `user_recipe_ingredients`
 
@@ -141,9 +146,12 @@ Custom recipes (`source = custom`).
 | `id` | INTEGER PK AUTOINCREMENT | |
 | `source` | TEXT NOT NULL | `bundled` \| `api` \| `custom`. |
 | `recipe_key` | TEXT NOT NULL | |
+| `recipe_name` | TEXT NOT NULL | Denormalized name for display without re-resolving. |
 | `cooked_at` | INTEGER NOT NULL | |
 | `servings` | INTEGER NULL | |
 | `notes` | TEXT NULL | |
+| `updated_at` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; required for sync LWW. |
+| `is_deleted` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; soft-delete for sync. |
 
 **Indexes:** `cooked_at DESC` for variety exclusions and leftovers.
 
@@ -159,8 +167,11 @@ Rows represent **trackable leftover items** derived from history or manual entry
 | `created_at` | INTEGER NOT NULL | |
 | `expires_at` | INTEGER NULL | Hint for UI. |
 | `source_meal_history_id` | INTEGER NULL | Logical link to `meal_history.id` if created from a cook event. |
+| `source` | TEXT NULL | Added migration 003; recipe source for chip → MealDetail navigation. |
+| `recipe_key` | TEXT NULL | Added migration 003; recipe key for chip → MealDetail navigation. |
 | `hidden` | INTEGER NOT NULL DEFAULT 0 | 1 = dismissed from board. |
 | `updated_at` | INTEGER NOT NULL | Required for LWW conflict resolution during sync. |
+| `is_deleted` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; soft-delete for sync. |
 
 ### Table: `cart_lines`
 
@@ -175,6 +186,7 @@ Current cart for grocery checkout. **Attribution** for household: optional `memb
 | `member_id` | TEXT NULL | FK → `household_members.id`. |
 | `added_at` | INTEGER NOT NULL | |
 | `updated_at` | INTEGER NOT NULL | |
+| `is_deleted` | INTEGER NOT NULL DEFAULT 0 | Added migration 004; soft-delete for sync. |
 
 **Index:** `(member_id, source, recipe_key)` for merges.
 
@@ -202,34 +214,115 @@ Optional normalized log for savings and history; alternatively store only aggreg
 ### Table: `household_members`
 
 Local roster for display and cart attribution. Synced per [`sync-protocol.md`](./sync-protocol.md).
+Rebuilt in migration 004 — schema below reflects actual DDL.
 
 | Column | Type | Notes |
 |--------|------|--------|
-| `id` | TEXT PK | UUID; device owner has stable id. |
+| `id` | TEXT PK | UUID. |
+| `household_id` | TEXT NOT NULL | Shared opaque id from sync backend. |
+| `user_id` | TEXT NULL | Supabase `auth.users.id` once linked. |
 | `display_name` | TEXT NOT NULL | |
-| `is_self` | INTEGER NOT NULL DEFAULT 0 | 1 for this device’s primary user. |
+| `role` | TEXT NOT NULL DEFAULT ‘member’ | `owner` or `member`; enforced in app code. |
 | `joined_at` | INTEGER NOT NULL | |
+| `updated_at` | INTEGER NOT NULL | LWW sync field. |
+| `is_deleted` | INTEGER NOT NULL DEFAULT 0 | Soft-delete for sync. |
+
+**Index:** `household_id` (filtered on `is_deleted = 0`).
 
 ### Table: `sync_device`
 
-Single-row or key-value for this install.
+Registration record for this install. Rebuilt in migration 006.
 
 | Column | Type | Notes |
 |--------|------|--------|
-| `device_id` | TEXT PK | Stable random id created on first launch. |
-| `household_id` | TEXT NULL | Shared opaque id from sync backend setup. |
-| `last_successful_push_at` | INTEGER NULL | |
-| `last_successful_pull_at` | INTEGER NULL | |
+| `id` | TEXT PK | UUID generated on first register. |
+| `device_name` | TEXT NOT NULL | Human-readable (e.g. "iPhone 15"). |
+| `platform` | TEXT NOT NULL | `ios` \| `android`. |
+| `registered_at` | INTEGER NOT NULL | |
+| `last_seen_at` | INTEGER NOT NULL | Updated on each app foreground. |
 
-### Table: `sync_outbox` (optional but recommended)
+### Table: `sync_outbox`
+
+Write-ahead log for changes pending push to remote. Created in migration 004.
 
 | Column | Type | Notes |
 |--------|------|--------|
-| `id` | INTEGER PK AUTOINCREMENT | |
-| `entity` | TEXT NOT NULL | e.g. `favorites`, `user_recipes`. |
-| `payload_json` | TEXT NOT NULL | |
+| `id` | TEXT PK | UUID. |
+| `table_name` | TEXT NOT NULL | e.g. `favorites`, `user_recipes`. |
+| `row_id` | TEXT NOT NULL | PK of the changed row. |
+| `operation` | TEXT NOT NULL | `upsert` or `delete`. |
+| `payload` | TEXT NOT NULL | JSON snapshot of the row at write time. |
+| `status` | TEXT NOT NULL DEFAULT ‘pending’ | `pending` \| `inflight` \| `failed`. |
 | `created_at` | INTEGER NOT NULL | |
 | `attempts` | INTEGER NOT NULL DEFAULT 0 | |
+
+**Index:** `(status, created_at)` for flush ordering.
+
+### Table: `saved_recipe_snapshots`
+
+Full copy of a bundled or API recipe written once (INSERT OR IGNORE) at the moment the user first favorites or cooks it. Ensures favorites and meal history remain resolvable if the bundled DB is later rebuilt and the recipe is removed. Created in migration 005.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | TEXT PK | Matches `recipe_key`. |
+| `source` | TEXT NOT NULL | `bundled` \| `api`. |
+| `recipe_key` | TEXT NOT NULL | External recipe id. |
+| `name` | TEXT NOT NULL | |
+| `description` | TEXT NULL | |
+| `cuisine_area` | TEXT NULL | |
+| `category_raw` | TEXT NULL | |
+| `dietary_tags` | TEXT NULL | |
+| `meal_time_bucket` | TEXT NOT NULL | |
+| `protein_display` | TEXT NULL | |
+| `youtube_url` | TEXT NULL | |
+| `image_url` | TEXT NULL | |
+| `instructions` | TEXT NULL | |
+| `ingredients_text` | TEXT NULL | |
+| `cook_time_min` | INTEGER NULL | |
+| `servings` | TEXT NULL | |
+| `snapshotted_at` | INTEGER NOT NULL | |
+| `updated_at` | INTEGER NOT NULL | |
+| **UNIQUE** | (`source`, `recipe_key`) | One snapshot per recipe; never overwritten. |
+
+**Index:** `(source, recipe_key)`.
+
+### Table: `user_recipe_tags`
+
+Bucket/tag membership for custom and community recipes. Created in migration 006.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `recipe_key` | TEXT NOT NULL | FK → `user_recipes.id`. |
+| `tag` | TEXT NOT NULL | Bucket slug (e.g. `tonightIn30`, `healthy`). |
+| `created_at` | INTEGER NOT NULL | |
+| **PRIMARY KEY** | (`recipe_key`, `tag`) | |
+
+### Table: `community_recipe_cache`
+
+Local cache of community recipes fetched from remote Supabase. TTL = 24 hours. Created in migration 007.
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | TEXT PK | UUID (local cache row id). |
+| `community_id` | TEXT NOT NULL | Remote `community_recipes.id` (UUID). |
+| `name` | TEXT NOT NULL | |
+| `description` | TEXT NULL | |
+| `cuisine_area` | TEXT NULL | |
+| `dietary_tags` | TEXT NULL | |
+| `meal_time_bucket` | TEXT NOT NULL | |
+| `instructions` | TEXT NULL | |
+| `ingredients_text` | TEXT NULL | |
+| `cook_time_min` | INTEGER NULL | |
+| `servings` | TEXT NULL | |
+| `image_url` | TEXT NULL | |
+| `youtube_url` | TEXT NULL | |
+| `author_user_id` | TEXT NOT NULL | Remote Supabase user id. |
+| `author_display_name` | TEXT NOT NULL | |
+| `flag_count` | INTEGER NOT NULL DEFAULT 0 | Recipes with `flag_count >= 5` hidden client-side. |
+| `cached_at` | INTEGER NOT NULL | Unix ms; stale after 24 hrs. |
+| **UNIQUE** | (`community_id`) | |
+
+**Index:** `cached_at DESC`.
 
 ---
 
@@ -285,3 +378,4 @@ Export rows do not require a separate table; build from `favorites`, `user_recip
 |-------------|--------|
 | 1 | Initial Phase 0 companion. |
 | 2 | Added `updated_at` to `leftovers`; UUID note to `checkout_events.id`; `api_recipe_cache` table; CSV import column mapping table. |
+| 3 | Synced to migrations 003–007: `leftovers` source/recipe_key columns; soft-delete (`is_deleted`) on 5 tables; rebuilt `household_members` and `sync_outbox`; new `sync_device`, `saved_recipe_snapshots`, `user_recipe_tags`, `community_recipe_cache` tables; community columns on `user_recipes`. |
