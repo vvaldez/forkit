@@ -1,0 +1,26 @@
+name: Weekly community recipe export
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'  # Monday 4am UTC
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Export community recipes
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scripts/export-community-recipes.js
+
+      - name: Commit export
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add community-recipes-export.json
+          git diff --staged --quiet || git commit -m "chore: weekly community recipe export [skip ci]"
+          git push
