@@ -180,6 +180,11 @@ Current Browse hardcodes bucket rules as SQL WHERE clauses in TypeScript. Planne
 - [ ] **Editorial "Kitchen" buckets (Browse Option D)** — curated collections that map multiple cuisine+category combinations into hero cards with editorial descriptions (e.g. "Quick Weeknight", "Comfort Food"); fold in once recipe volume increases or Spoonacular tags enable richer filtering. Pill accuracy for "Healthy" and "Low Carb" also improves with Spoonacular `healthScore`/carb enrichment — plan that pass before promoting these pills as accurate.
 - [ ] **Realtime collaboration** on top of synced documents (Firestore listeners, Supabase Realtime, or self-hosted WS)—see `SPEC.md` household section.
 - [ ] **Google Sheets → import** pipeline for custom recipes (post-v1).
-- [ ] **"What can I make with this ingredient?"** (medium priority) — reverse ingredient lookup: tap any ingredient on GroceryList or MealDetail to see all recipes it appears in. Requires an ingredient → recipe index, either at ETL time or via `ingredients_text LIKE` query at runtime.
+- [ ] **"What can I make with this ingredient?"** (medium priority) — reverse ingredient lookup: tap any ingredient on GroceryList or MealDetail to see all recipes it appears in.
+  - **DB decision:** No new field needed. Query `recipes.ingredients_text LIKE '%<keyword>%'` at runtime — zero schema changes, sub-millisecond on local SQLite at current scale (~598 recipes). Upgrade to ETL index table later if precision becomes a complaint.
+  - **Keyword extraction:** Strip leading quantity + unit from `line_text` via regex before the LIKE query (e.g. `"1 cup flour"` → `"flour"`). No NLP needed.
+  - **Entry points:** `MealDetailScreen` ingredient lines (currently static `<Text>`) + `GroceryListScreen` ingredient text (currently checkbox-only).
+  - **UI:** Bottom sheet titled "Recipes with [ingredient]" — same card style as Search results; excludes recipes cooked in last 7 days; limit 30; navigate to MealDetail on tap.
+  - **Scope:** Bundled + community bundle recipes only (`ingredients_text` exists on both). Custom recipes excluded.
 - [x] **Past grocery lists / order history** — shipped in Phase 7; `PastGroceryListsScreen` reads `checkout_events`.
 - [ ] Features marked **proposed** in `SPEC.md` (weekly planner, budget themes, share sheet enhancements, skill tags).
