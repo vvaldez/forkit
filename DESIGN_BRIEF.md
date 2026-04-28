@@ -186,8 +186,8 @@ If proposing icon direction options, share as low-fidelity sketches or quick Fig
 
 ---
 
-## Questions to answer before starting
+## Brand decisions (locked)
 
-- Should the wordmark "ForkIt" be one word or two? (Current code uses one word: `ForkIt`)
-- Is the tagline "Fork it, I'll cook it myself." to be used in marketing materials, or kept as in-app copy only?
-- Any brand comparisons / apps whose visual tone to aim for or avoid?
+- **One word: ForkIt.** Not "Fork It". Wordmark, App Store name, UI copy, all marketing — always `ForkIt`.
+- Tagline **"Fork it, I'll cook it myself."** — approved for marketing materials and in-app copy. The tagline uses lowercase "fork it" as a phrase, distinct from the brand name `ForkIt`.
+- Any brand comparisons / visual tone references: share with artist directly.
