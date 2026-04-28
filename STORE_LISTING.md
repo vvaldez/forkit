@@ -7,7 +7,7 @@ Copy for App Store Connect and Google Play Console. Paste directly into the rele
 ## App Store (iOS)
 
 ### Name
-ForkIt
+ForkIt: Meal Planner
 
 ### Subtitle (30 chars max)
 Fork delivery. Cook it yourself.
