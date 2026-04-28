@@ -135,16 +135,42 @@ Current Browse hardcodes bucket rules as SQL WHERE clauses in TypeScript. Planne
 
 ### Phase 6 checklist
 - [x] **CSV export** from Settings per `SPEC.md`.
-- [x] **Community Supabase table** + Share to Community button on MealDetail + CustomRecipeForm
+- [x] **Community Supabase table** + Share to Community button on MealDetail
 - [x] **Community browse section** in Browse tab + `community_recipe_cache` user DB table (migration 007)
 - [x] **GitHub Actions weekly export** cron → `community-recipes-export.json` + `scripts/export-community-recipes.js`
-- [ ] **`recipe_tag_rules` + `recipe_bucket_membership`** in bundled DB + ETL update — deferred to Phase 7
-- [ ] **OTA sidecar loader** (`recipe_tag_overrides.json`) — deferred to Phase 7
+- [ ] **`recipe_tag_rules` + `recipe_bucket_membership`** in bundled DB + ETL update — deferred
+- [x] **OTA sidecar** `assets/recipe_tag_overrides.json` + migration 008 `recipe_tag_overrides` table
 - [x] **`user_recipe_tags`** table — shipped in migration 006
 - [x] **Privacy policy** — `forkit/privacy-policy.md`; app.json bundle IDs added (`com.forkit.mobile`)
 - [ ] Store listing assets (icon, screenshots, description) — owner-driven
 - [ ] **Test matrix** (offline flights, sync conflict spot checks, API rate-limit behavior).
 - [ ] **App Store / Play** submission (owner-driven).
+
+---
+
+## Phase 7: Polish, navigation & history — complete ✓
+
+- [x] **Discover tab** replaces Search tab; Search moved to stack screen (pushed from Browse 🔍 icon)
+- [x] **Visual auth indicator** — green dot on ⚙️ gear icon in Browse + Home headers when signed in
+- [x] **UX fixes**: raw DB error → friendly message; GroceryList Done → Home tab; questionnaire empty → "Try different filters"
+- [x] **Past grocery lists** screen — `PastGroceryListsScreen`, wired in Settings → Data
+- [x] **Dead code** — `MenuScreen.tsx` deleted
+- [ ] **CSV import** — `expo-document-picker`, Settings import row — deferred
+- [ ] **Data-driven Browse buckets** (`recipe_tag_rules` + `recipe_bucket_membership` in bundled DB ETL) — deferred
+- [ ] **YouTube → Recipe** extraction (Supabase Edge Function) — deferred (tracked as future premium feature)
+
+---
+
+## Phase 8: Community bundle — complete ✓
+
+- [x] **ExtractIt** (`forkit-secrets/extractit/`) — Node.js CLI that fetches YouTube transcripts via innertube API, extracts recipes with Claude Haiku, outputs CSV. Run: `node extract.js`. Config: `config.yaml`.
+- [x] **`scripts/build-community-db.js`** — reads all CSVs from `forkit-secrets/extractit/output/`, builds `assets/community.bundle.sqlite` (same schema as main bundle + attribution columns).
+- [x] **`assets/community.bundle.sqlite`** — 17 AllRecipes recipes, `content_version 1.0.0`.
+- [x] **`src/db/communityBundled.ts`** — open/version-check mirror of `bundled.ts`.
+- [x] **`DatabaseContext`** — opens `communityDb` in parallel; `useCommunityDb()` hook.
+- [x] **`resolveRecipe`** — `'community_bundle'` source type added; optional `communityDb` param.
+- [x] **BrowseScreen** — "AllRecipes Picks" horizontal bucket from `communityDb`; navigates with `source: 'community_bundle'`.
+- [x] **MealDetailScreen** — passes `communityDb` to `resolveRecipe`.
 
 ---
 
@@ -155,5 +181,5 @@ Current Browse hardcodes bucket rules as SQL WHERE clauses in TypeScript. Planne
 - [ ] **Realtime collaboration** on top of synced documents (Firestore listeners, Supabase Realtime, or self-hosted WS)—see `SPEC.md` household section.
 - [ ] **Google Sheets → import** pipeline for custom recipes (post-v1).
 - [ ] **"What can I make with this ingredient?"** (medium priority) — reverse ingredient lookup: tap any ingredient on GroceryList or MealDetail to see all recipes it appears in. Requires an ingredient → recipe index, either at ETL time or via `ingredients_text LIKE` query at runtime.
-- [ ] **Past grocery lists / order history** — access previous `checkout_events` snapshots from a history screen; data already exists, just needs UI.
+- [x] **Past grocery lists / order history** — shipped in Phase 7; `PastGroceryListsScreen` reads `checkout_events`.
 - [ ] Features marked **proposed** in `SPEC.md` (weekly planner, budget themes, share sheet enhancements, skill tags).
