@@ -119,17 +119,49 @@ If going with wordmark: **ForkIt** in a bold sans-serif, white on red. Same tagl
 
 Each empty state needs a small illustration (not a photograph). Style should be flat, minimal, 2–3 colors from the palette.
 
-| Screen | Empty state trigger | Suggested illustration |
-|--------|--------------------|-----------------------|
-| Favorites | No saved recipes yet | A heart outline with a fork inside, or a bare plate |
-| Cart | Cart is empty | An empty shopping basket with a fork leaning against it |
-| Search | No results found | A fork with a question mark, or a magnifying glass finding nothing |
-| Grocery list | (shouldn't be empty, but fallback) | A clean blank list with a pencil |
+### Screens and triggers
 
-**Specifications:**
-- Canvas: 200 × 160 px
-- Style: flat vector, 2–3 colors max
-- Export: SVG preferred; PNG @2x fallback
+**Favorites — "No saved recipes yet"**
+- Trigger: user has never favorited anything
+- Current placeholder: `♡` emoji (56pt, `#e0e0e0`)
+- Heading below: "No saved recipes yet"
+- Subtext: "Tap the heart on any recipe to save it here."
+- CTA button below subtext: "Browse Recipes" (brand red)
+- Suggested illustration: heart outline with a fork tucked inside it; or a bare plate with a single fork resting on it
+
+**Cart — "Your cart is empty"**
+- Trigger: no meals added to cart
+- Current placeholder: `🛒` emoji (56pt)
+- Heading: "Your cart is empty"
+- Subtext: "Browse recipes and tap Add to Cart to get started."
+- No CTA button — illustration + text only
+- Suggested illustration: empty woven basket, fork leaning against the side; warm, friendly, not sad
+
+**Search — "No results"**
+- Trigger: query returned zero matches (only shown after user searches, not on blank state)
+- Current placeholder: text only — no icon
+- Heading: `No recipes matched "[query]".`
+- Subtext: "Try different keywords or tap the compass for a random pick."
+- Suggested illustration: magnifying glass finding an empty plate; or a fork with a question mark shadow
+
+**Grocery list — fallback (rare)**
+- Trigger: checkout_event exists but ingredient list is empty (edge case)
+- No placeholder currently — would crash gracefully to blank
+- Suggested illustration: blank notepad with a pencil, one empty dotted line
+
+### Specifications
+
+- **Canvas:** 200 × 160 pt (design at 2× = 400 × 320 px)
+- **Safe zone:** keep illustration content within center 180 × 140 pt (10pt margin each edge)
+- **Style:** flat vector, no gradients, no shadows, 2–3 palette colors max
+- **Palette:** use brand colors — `#E8474C` red, `#F2F2F2` light grey, `#888888` mid-grey, white. One accent of `#4CAF50` green or `#FFE0B2` warm orange allowed if it helps the illustration.
+- **Mood:** friendly and light — these states should feel encouraging, not punishing
+- **Export:** SVG master + PNG @1×/2×/3× for each illustration (12 PNG files total + 4 SVGs)
+- **Filename convention:** `empty-favorites`, `empty-cart`, `empty-search`, `empty-grocery`
+
+### Integration note for developer
+
+Each illustration drops into the existing `emptyContainer` View in place of the current emoji `Text` node. Image dimensions in code will be `width: 200, height: 160`. No layout changes needed — just swap the `<Text style={emptyIcon}>` for `<Image source={require('../../assets/illustrations/empty-favorites.png')} style={{ width: 200, height: 160 }} />`.
 
 ---
 
