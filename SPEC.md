@@ -212,13 +212,13 @@ Milestone numbers below refer to **product intent**, not the archived Next.js co
 
 Complete these in the **`forkit`** repo **before** or in parallel with implementation spikes (recommended order). They describe **behavior and data shape only** — never put live API keys, tokens, or credentials in any file under `forkit/` ([`../SECURITY.md`](../SECURITY.md); local secrets live in [`../forkit-secrets/`](../forkit-secrets/README.md)).
 
-Use [`priorities.md`](./priorities.md) as the weighted decision framework when evaluating architecture and feature tradeoffs.
+Use [`priorities.md`](../forkit-source/docs/priorities.md) as the weighted decision framework when evaluating architecture and feature tradeoffs.
 
-1. [`schema.md`](./schema.md) — Bundled vs user SQLite tables, indexes, migrations.
-2. [`ux-screens.md`](./ux-screens.md) — Every screen, navigation, empty/offline/error states.
-3. [`api-integration.md`](./api-integration.md) — TheMealDB, USDA, optional APIs: endpoints, mapping, rate limits, key storage.
-4. [`sync-protocol.md`](./sync-protocol.md) — Sync document model, REST contract, conflict strategy, Firebase/Supabase shapes, triggers.
-5. [`recipe-sources.md`](./recipe-sources.md) (lower priority) — How bundled SQLite is built, licensed, and rebundled per release.
+1. [`schema.md`](../forkit-source/docs/schema.md) — Bundled vs user SQLite tables, indexes, migrations.
+2. [`ux-screens.md`](../forkit-source/docs/ux-screens.md) — Every screen, navigation, empty/offline/error states.
+3. [`api-integration.md`](../forkit-source/docs/api-integration.md) — TheMealDB, USDA, optional APIs: endpoints, mapping, rate limits, key storage.
+4. [`sync-protocol.md`](../forkit-source/docs/sync-protocol.md) — Sync document model, REST contract, conflict strategy, Firebase/Supabase shapes, triggers.
+5. [`recipe-sources.md`](../forkit-source/docs/recipe-sources.md) (lower priority) — How bundled SQLite is built, licensed, and rebundled per release.
 
 ---
 
