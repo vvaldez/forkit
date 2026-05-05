@@ -59,15 +59,15 @@ forkit-project/
 | File | Purpose |
 |------|---------|
 | [`SPEC.md`](./SPEC.md) | Full product requirements and UX behavior |
-| [`PLAN.md`](./PLAN.md) | Milestones and progress checklist |
-| [`schema.md`](./schema.md) | SQLite database schema (bundled + user) |
-| [`ux-screens.md`](./ux-screens.md) | Navigation tree, screen specs, offline/error states |
-| [`api-integration.md`](./api-integration.md) | TheMealDB field mapping, USDA enrichment |
-| [`sync-protocol.md`](./sync-protocol.md) | Future household sync design |
-| [`SOP.md`](./SOP.md) | How each milestone is run end to end |
-| [`ESR.md`](./ESR.md) | Smart-question habits for support and bugs |
+| [`PLAN.md`](../forkit-source/docs/PLAN.md) | Milestones and progress checklist |
+| [`schema.md`](../forkit-source/docs/schema.md) | SQLite database schema (bundled + user) |
+| [`ux-screens.md`](../forkit-source/docs/ux-screens.md) | Navigation tree, screen specs, offline/error states |
+| [`api-integration.md`](../forkit-source/docs/api-integration.md) | TheMealDB field mapping, USDA enrichment |
+| [`sync-protocol.md`](../forkit-source/docs/sync-protocol.md) | Future household sync design |
+| [`SOP.md`](../forkit-source/docs/SOP.md) | How each milestone is run end to end |
+| [`ESR.md`](../forkit-source/docs/ESR.md) | Smart-question habits for support and bugs |
 | [`AGENTS.md`](./AGENTS.md) | AI / contributor workflow for this repo |
-| [`priorities.md`](./priorities.md) | Architecture and feature decision framework |
+| [`priorities.md`](../forkit-source/docs/priorities.md) | Architecture and feature decision framework |
 
 ---
 
