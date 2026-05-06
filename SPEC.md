@@ -89,7 +89,7 @@ A DoorDash-style **household menu** surface: tonight’s suggestion, recent meal
 
 ForkIt is **local-only by default.** The app is fully functional — browsing, searching, questionnaire, cart, grocery lists, favorites, history, leftovers, savings — without any account or network connection. No configuration is required to use the app.
 
-**Household sync is opt-in.** Users who want to share data across devices or with household members configure sync in Settings by supplying their own Supabase project URL and anon key. Identity within that project uses **email magic-link auth + household invite flows**.
+**Household sync is opt-in.** Users who want to share data across devices sign in with email magic-link in Settings. Sync uses the **app-operated Supabase service** — no user configuration required. For v1, each signed-in user syncs their own data across their own devices; shared household mode (group invites, merged cart attribution) ships in a follow-on phase.
 
 ### Auth offline contract
 
@@ -105,9 +105,8 @@ Auth state is only ever required for sync operations. **The app must never gate 
 | Option | Description |
 |--------|-------------|
 | **None (default)** | Local-only; single device, no household sharing. No setup required. |
-| **Supabase (user-supplied, v1)** | User provides their own Supabase project URL + anon key. Enables household sharing, magic-link auth, and invite flows within that project. |
-| **Firebase (optional later)** | Alternative adapter if intentionally enabled in future phases. |
-| **Self-hosted REST (optional later)** | Advanced adapter for power users or self-hosting needs. |
+| **Supabase (app-operated, v1)** | User signs in with email magic-link. App-operated Supabase; no user config needed. v1 = per-user multi-device sync. Group household sharing ships in a follow-on phase. |
+| **Self-hosted / user-supplied (post-v1)** | Advanced option: user provides their own Supabase URL + anon key or a self-hosted REST endpoint. Not in v1 scope. |
 
 Exact payloads, conflict rules, and identity are defined in companion doc **`sync-protocol.md`** (see [Companion specifications](#companion-specifications)).
 
@@ -118,10 +117,10 @@ The **previous** ForkIt web prototype used **PartyKit** for **real-time** multi-
 | Approach | Pros | Cons |
 |----------|------|------|
 | **Managed realtime (e.g. PartyKit-style)** | Lowest friction for a session; no account; instant mirrors. | Operational burden on whoever runs the service. Hard to square with “zero author-operated infra.” |
-| **User-supplied Supabase async sync (canonical v1)** | Zero author ops; user owns their data and project; recoverable auth/invites + clean household boundaries. | Collaboration is **eventual consistency**; “live” cart mirroring is a UX problem (refresh or explicit “sync now”), not a WebSocket guarantee. Requires user to set up a Supabase project. |
+| **App-operated Supabase async sync (canonical v1)** | Zero user config; magic-link sign-in; household boundaries via RLS. Free-tier Supabase sufficient for v1. | Collaboration is **eventual consistency**; “live” cart mirroring is explicit “sync now”, not a WebSocket guarantee. Developer bears Supabase hosting cost. |
 | **Hybrid later** | v1 ships with async sync; optional phase 2 can add Supabase Realtime or a documented self-hosted websocket on top of the same synced documents—without rewriting local-first storage. | Phase 1 does not replicate sub-second PartyKit feel without extra work. |
 
-**Product decision for this spec:** **v1 is local-only by default; household sync is opt-in via user-supplied Supabase (async, email magic-link auth, household invites).** Merged grocery lists and attribution (“who picked what”) come from merged synced state after sync rounds, plus clear UX for “ready to shop.”
+**Product decision for this spec:** **v1 is local-only by default; household sync is opt-in via app-operated Supabase (async, email magic-link auth).** Per-user multi-device sync ships first (household_id = auth.uid()); shared household mode (group invites, merged cart attribution, “ready to shop” UX) ships in Phase 8 follow-on. Conflict resolution is last-write-wins on `updated_at`.
 
 **Non-binding future note:** If realtime sessions return, they should reuse the same logical data model as sync (not a second source of truth), so Supabase Realtime or a power-user server remains an add-on, not a fork of the architecture.
 
