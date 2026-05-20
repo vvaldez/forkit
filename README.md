@@ -8,12 +8,14 @@ ForkIt is a mobile meal-planning app built on a single pun: *fork DoorDash — c
 
 ## What it does
 
-- **Browse & discover** — Scroll a recipe feed grouped by meal time and cuisine. Use the Discover tab to get a random pick or answer four quick questions (meal time, cuisine, dietary preference, cook time) to get a filtered list.
-- **Cart & grocery list** — Add recipes to a cart like a DoorDash group order. Check out to a combined or per-meal grocery list with checkboxes.
+- **Browse & discover** — Scroll a recipe feed grouped by meal time, cuisine, and curated buckets (Tonight in 30, Comfort Classics, World Kitchen, etc.). Filter by pill (Quick, Healthy, Meatless, Global, Low Carb). Use the Discover tab for a random pick or answer four quick questions to get a filtered list.
+- **Community recipes** — Browse recipes shared by other users in the Community section. Tap "Save" to add to your recipes, or tap a card to view full detail. Share your own custom recipes to the community.
+- **Cart & grocery list** — Add recipes to a cart like a DoorDash group order. Check out to a combined or per-meal grocery list with checkboxes. Assign cart items to household members.
 - **Savings tracking** — Every checkout estimates what delivery would have cost vs. cooking at home. Lifetime savings accumulate in your profile.
 - **Cooking log** — Tap "I'm making this" on any recipe to log it to history. Leftovers appear as a banner in Browse so you remember what's already in the fridge.
-- **Favorites & custom recipes** — Save recipes you love. Write your own with ingredients and instructions.
-- **Fully offline** — All bundled recipes work with no internet connection. Your cart, history, favorites, and custom recipes live on-device.
+- **Favorites & custom recipes** — Save recipes you love. Write your own with ingredients and instructions and optionally share them to the community.
+- **Household members** — Add named members to assign meals to specific people. Grocery list shows per-member attribution.
+- **Offline-first** — All bundled recipes (~600 TheMealDB + 17 AllRecipes picks) work with no internet. Your cart, history, favorites, and custom recipes live on-device. Community content cached locally with 24-hour TTL.
 
 ---
 
@@ -23,11 +25,12 @@ ForkIt is a mobile meal-planning app built on a single pun: *fork DoorDash — c
 |-------|--------|
 | Mobile framework | React Native (Expo ~54, managed workflow) |
 | Language | TypeScript |
-| Database | Two SQLite files via expo-sqlite v15: bundled read-only (recipes) + user read-write (everything else) |
+| Local database | Two SQLite files via expo-sqlite ~16: bundled read-only (recipes + community bundle) + user read-write (everything else) |
+| Backend | Supabase (community recipes, auth, optional sync) |
 | Navigation | React Navigation native-stack + bottom tabs |
-| Recipe data | TheMealDB (bundled at build time) |
+| Recipe data | TheMealDB (bundled at build time) + AllRecipes picks (community bundle) + user-generated |
 
-The app is **offline-first**: no account required, no backend required for core features. Household sync and auth are planned for a future phase.
+The app is **offline-first**: core features work with no account and no internet. Auth and community features require a connection.
 
 ---
 
@@ -39,7 +42,7 @@ The app is **offline-first**: no account required, no backend required for core 
 
 **App icon concept:** A bold stylized fork — the utensil, but also a fork-in-the-road decision moment. White on brand red. Avoid delivery bags, chef's hats, or crossed knife-and-fork.
 
-See [`DESIGN_BRIEF.md`](./DESIGN_BRIEF.md) in the source repo for full icon specs, tab bar icon specs, empty state illustrations, and color palette.
+See [`DESIGN_BRIEF.md`](./DESIGN_BRIEF.md) for full icon specs, tab bar icon specs, empty states, and color palette.
 
 ---
 
@@ -59,24 +62,22 @@ forkit-project/
 | File | Purpose |
 |------|---------|
 | [`SPEC.md`](./SPEC.md) | Full product requirements and UX behavior |
-| [`PLAN.md`](../forkit-source/docs/PLAN.md) | Milestones and progress checklist |
-| [`schema.md`](../forkit-source/docs/schema.md) | SQLite database schema (bundled + user) |
-| [`ux-screens.md`](../forkit-source/docs/ux-screens.md) | Navigation tree, screen specs, offline/error states |
-| [`api-integration.md`](../forkit-source/docs/api-integration.md) | TheMealDB field mapping, USDA enrichment |
-| [`sync-protocol.md`](../forkit-source/docs/sync-protocol.md) | Future household sync design |
-| [`SOP.md`](../forkit-source/docs/SOP.md) | How each milestone is run end to end |
-| [`ESR.md`](../forkit-source/docs/ESR.md) | Smart-question habits for support and bugs |
+| [`DESIGN_BRIEF.md`](./DESIGN_BRIEF.md) | Brand, icon specs, color palette, empty states |
 | [`AGENTS.md`](./AGENTS.md) | AI / contributor workflow for this repo |
-| [`priorities.md`](../forkit-source/docs/priorities.md) | Architecture and feature decision framework |
+| [`privacy-policy.md`](./privacy-policy.md) | Privacy policy |
 
 ---
 
-## Roadmap (high level)
+## Roadmap
 
 - **Phases 1–4 ✅** — Offline browse, search, favorites, cart, grocery list, savings, cooking log, leftovers, Discover tab, questionnaire
 - **Phase 5a ✅** — Home tab with household menu view and ingredient-efficiency hints
-- **Phase 5b** — Magic-link auth, session restore, Settings screen
-- **Phase 6** — Household sync, group cart, App Store / Play Store release
+- **Phase 5b ✅** — Magic-link auth (email OTP), session restore, Settings screen, sync engine foundation
+- **Phase 6 ✅** — Community recipes (Supabase table, Share to Community, community browse section, weekly export cron, OTA tag overrides)
+- **Phase 7 ✅** — Discover tab, visual auth indicator, past grocery lists, navigation polish
+- **Phase 8 ✅** — AllRecipes community bundle (17 recipes extracted via Claude + ExtractIt CLI, shipped as `community.bundle.sqlite`)
+- **In progress** — Household member assignment (local, no account required): add members in Settings, assign cart items to members, per-member grocery list attribution
+- **Remaining** — App Store / Play Store submission
 
 ---
 
