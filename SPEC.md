@@ -89,7 +89,7 @@ A DoorDash-style **household menu** surface: tonight’s suggestion, recent meal
 
 ForkIt is **local-only by default.** The app is fully functional — browsing, searching, questionnaire, cart, grocery lists, favorites, history, leftovers, savings — without any account or network connection. No configuration is required to use the app.
 
-**Household sync is opt-in.** Users who want to share data across devices sign in with email magic-link in Settings. Sync uses the **app-operated Supabase service** — no user configuration required. For v1, each signed-in user syncs their own data across their own devices; shared household mode (group invites, merged cart attribution) ships in a follow-on phase.
+**Household sync is opt-in.** Users who want to share data across devices sign in with email magic-link in Settings. Sync uses the **app-operated Supabase service** — no user configuration required. For v1, each signed-in user syncs their own data across their own devices; shared household mode (group invites, multi-device merged cart) ships in a follow-on phase.
 
 ### Auth offline contract
 
@@ -120,7 +120,7 @@ The **previous** ForkIt web prototype used **PartyKit** for **real-time** multi-
 | **App-operated Supabase async sync (canonical v1)** | Zero user config; magic-link sign-in; household boundaries via RLS. Free-tier Supabase sufficient for v1. | Collaboration is **eventual consistency**; “live” cart mirroring is explicit “sync now”, not a WebSocket guarantee. Developer bears Supabase hosting cost. |
 | **Hybrid later** | v1 ships with async sync; optional phase 2 can add Supabase Realtime or a documented self-hosted websocket on top of the same synced documents—without rewriting local-first storage. | Phase 1 does not replicate sub-second PartyKit feel without extra work. |
 
-**Product decision for this spec:** **v1 is local-only by default; household sync is opt-in via app-operated Supabase (async, email magic-link auth).** Per-user multi-device sync ships first (household_id = auth.uid()); shared household mode (group invites, merged cart attribution, “ready to shop” UX) ships in Phase 8 follow-on. Conflict resolution is last-write-wins on `updated_at`.
+**Product decision for this spec:** **v1 is local-only by default; household sync is opt-in via app-operated Supabase (async, email magic-link auth).** Local household member management and cart attribution (assign meals to named members, show “For: [name]” in the grocery list) ship in **core v1** without requiring sync or an account. Per-user multi-device sync ships next (household_id = auth.uid()); shared household mode (group invites, multi-device merged cart, “ready to shop” UX) ships in Phase 8 follow-on. Conflict resolution is last-write-wins on `updated_at`.
 
 **Non-binding future note:** If realtime sessions return, they should reuse the same logical data model as sync (not a second source of truth), so Supabase Realtime or a power-user server remains an add-on, not a fork of the architecture.
 
@@ -148,12 +148,16 @@ Milestone numbers below refer to **product intent**, not the archived Next.js co
 #### Feature 1.2: Cart & grocery list (v1)
 
 - Add meals to a cart; floating cart / badge mirroring delivery-app patterns.
+- Assign any cart row to a household member (“For: Alex”); assignment persisted in `cart_lines.member_id`.
 - Checkout generates a **consolidated grocery list**: combined deduplicated checklist and by-meal grouped view.
+- By-meal view shows **”For: [name]”** attribution under each assigned meal section header; member name is snapshotted at checkout so the list stays stable even if a member is later renamed or deleted.
 
-#### Feature 1.3: Household meal planning (v1)
+#### Feature 1.3: Household member management (v1)
 
-- Households that enable sync share favorites, custom recipes, history, leftovers, and planning-related state per **`sync-protocol.md`**.
-- Cook sees merged contributions with attribution where the data model supports it; explicit “ready to generate list” flow (exact UX TBD in **`ux-screens.md`**).
+- Manage named household members in Settings (add, rename, delete); stored locally, no account required.
+- Members are used to assign cart rows and attribute grocery list sections (see Feature 1.2).
+
+**Shared household sync** — group invites, multi-device cart merging, “ready to shop” UX — ships in a **Phase 8 follow-on**; see `sync-protocol.md`.
 
 #### Feature 1.4: “What do you feel like?” Questionnaire (v1)
 
