@@ -1,0 +1,6 @@
+# Normalize all text files to LF line endings in the repository, checked out
+# as LF regardless of platform (Windows/WSL/macOS/Linux). This is a docs-only
+# repo — no binary assets are currently tracked, but the wildcard rule below
+# still leaves genuinely binary files alone (git's text=auto autodetects them).
+
+* text=auto eol=lf
