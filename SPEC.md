@@ -67,7 +67,7 @@ Internal recipe records should remain aligned with **Schema.org/Recipe**-style f
 Custom recipes are the **primary variety growth path** — the mechanism by which a household's catalog expands well beyond the ~598-meal starter pack. They must be as frictionless to add as possible.
 
 - **v1 — in-app entry:** Name, ingredients, and instructions are the only required fields. All other fields (cuisine, dietary tags, cook time, servings, YouTube link, photo, notes) are optional. Custom recipes are stored in the **local user SQLite** database and appear on all the same surfaces as bundled/API recipes: search, favorites, questionnaire, and menu.
-- **v1 — CSV import:** Import recipes from a CSV file (e.g. a spreadsheet export) directly into `user_recipes`. This is a v1 feature, not a post-v1 add-on, because it is the lowest-friction way to bulk-grow a household's catalog. Column mapping follows the export format defined in [User data & export](#user-data--export).
+- **CSV import (Future):** Import recipes from a CSV file (e.g. a spreadsheet export) directly into `user_recipes`. Column mapping follows the export format defined in [User data & export](#user-data--export). Originally labeled v1; formally reclassified to Future (2026-06) — the in-app entry path and community recipe saving cover the bulk-grow use case for v1.
 - **Ingredient validation:** Optional, non-blocking when online (USDA-first; unrecognized ingredients get a soft warning, never a hard block on save).
 - **Google Sheets as live source:** Not part of the v1 architecture. CSV export from a Sheet and import via the CSV path above is the supported workflow.
 
@@ -89,7 +89,7 @@ A DoorDash-style **household menu** surface: tonight’s suggestion, recent meal
 
 ForkIt is **local-only by default.** The app is fully functional — browsing, searching, questionnaire, cart, grocery lists, favorites, history, leftovers, savings — without any account or network connection. No configuration is required to use the app.
 
-**Household sync is opt-in.** Users who want to share data across devices sign in with email magic-link in Settings. Sync uses the **app-operated Supabase service** — no user configuration required. For v1, each signed-in user syncs their own data across their own devices; shared household mode (group invites, merged cart attribution) ships in a follow-on phase.
+**Household sync is opt-in.** Users who want to share data across devices sign in with email magic-link in Settings. Sync uses the **app-operated Supabase service** — no user configuration required. For v1, each signed-in user syncs their own data across their own devices; shared household mode (group invites, multi-device merged cart) ships in a follow-on phase.
 
 ### Auth offline contract
 
@@ -120,9 +120,65 @@ The **previous** ForkIt web prototype used **PartyKit** for **real-time** multi-
 | **App-operated Supabase async sync (canonical v1)** | Zero user config; magic-link sign-in; household boundaries via RLS. Free-tier Supabase sufficient for v1. | Collaboration is **eventual consistency**; “live” cart mirroring is explicit “sync now”, not a WebSocket guarantee. Developer bears Supabase hosting cost. |
 | **Hybrid later** | v1 ships with async sync; optional phase 2 can add Supabase Realtime or a documented self-hosted websocket on top of the same synced documents—without rewriting local-first storage. | Phase 1 does not replicate sub-second PartyKit feel without extra work. |
 
-**Product decision for this spec:** **v1 is local-only by default; household sync is opt-in via app-operated Supabase (async, email magic-link auth).** Per-user multi-device sync ships first (household_id = auth.uid()); shared household mode (group invites, merged cart attribution, “ready to shop” UX) ships in Phase 8 follow-on. Conflict resolution is last-write-wins on `updated_at`.
+**Product decision for this spec:** **v1 is local-only by default; household sync is opt-in via app-operated Supabase (async, email magic-link auth).** Local household member management and cart attribution (assign meals to named members, show “For: [name]” in the grocery list) ship in **core v1** without requiring sync or an account. Per-user multi-device sync ships next (household_id = auth.uid()); shared household mode (group invites, multi-device merged cart, “ready to shop” UX) ships in Phase 9 (Household Sync); group ordering link (CartSession, SessionLink, GroupSessionReview) ships in Phase 10 (Group Ordering). Conflict resolution is last-write-wins on `updated_at`.
 
 **Non-binding future note:** If realtime sessions return, they should reuse the same logical data model as sync (not a second source of truth), so Supabase Realtime or a power-user server remains an add-on, not a fork of the architecture.
+
+---
+
+## Security & trust boundaries
+
+The app is offline-first, but three features cross a network trust boundary into **app-operated** Supabase infrastructure the developer runs and pays for. Each is a place where a hostile client — one that extracted the shipped publishable/anon key from the APK in minutes — can send arbitrary requests. This section is the security contract those features must meet. It is binding; a feature that crosses one of these boundaries is not "done" until its controls here are implemented.
+
+### Trust boundaries
+
+| Surface | Who can write | Trust level | Primary threats |
+|---------|---------------|-------------|-----------------|
+| Local SQLite (bundled + user DB) | Device owner only | Trusted | Device compromise (out of scope for v1) |
+| Per-user sync tables (Phase 9) | Authenticated HouseholdMember (`auth.uid()`) | Semi-trusted | Forged `updated_at` (LWW poisoning), cross-household read/write via missing RLS, quota exhaustion |
+| `community_recipes` (Phase 6) | Any authenticated user | Untrusted content | Malicious/illegal content served to all users, publish-spam quota exhaustion, flag gaming |
+| `cart_sessions` guest writes (Phase 10) | **Anonymous** SessionLink token holder | **Hostile by default** | Unbounded writes, token brute-force/leak via link previews, forged timestamps, attacker-controlled `guest_display_name` rendered in host UI |
+
+### Baseline threat model (STRIDE-lite)
+
+- **Spoofing:** The anon key is public; possession is not authorization. Every write is gated by RLS bound to `auth.uid()` (authenticated surfaces) or a validated session token (guest surface). A Guest is unauthenticated and unattributable — controls bind to the token, never to a claimed identity (see [`CONTEXT.md` → Guest](../forkit-source/CONTEXT.md)).
+- **Tampering:** Client-supplied `updated_at` drives LWW conflict resolution and is forgeable. A Postgres trigger rejects any `updated_at` beyond `now()` + a small skew allowance (~5 min), defeating max-value poisoning while preserving legitimate offline-before-online ordering. See ADR-0004.
+- **Repudiation:** Accepted for guest writes by design — Guests are anonymous. Authenticated writes carry `auth.uid()` + `updated_by_device_id`.
+- **Information disclosure:** RLS `USING` clauses (not only `WITH CHECK`) scope every read; hidden/flagged community rows are filtered **server-side** and never shipped to clients.
+- **Denial of service / cost:** App-operated infra has finite free-tier quota. Per-user publish rate limits, per-token and per-IP guest write rate limits, per-session row-count caps, and per-row payload-size caps prevent one actor from exhausting storage or the hosting bill.
+- **Elevation of privilege:** No guest write may touch authenticated-user rows; session-token RLS is scoped strictly to its own `cart_session`.
+
+### SessionLink security contract (Phase 10)
+
+A SessionLink token is a **bearer credential** for anonymous writes to shared infrastructure. It must enforce, server-side:
+
+- **Entropy:** ≥128-bit random token.
+- **Lifetime:** Short TTL tied to the CartSession (hours, not days); expires with the session.
+- **Revocation:** Host can revoke a live session, invalidating the token immediately.
+- **Rate limits:** Per-token **and** per-IP write rate limits (link-preview bots and forwarding are expected).
+- **Caps:** Per-session row-count cap and per-row payload-size cap.
+- **RLS:** Both `USING` and `WITH CHECK`, scoped to the one `cart_session`; append-only (no update/delete of others' rows, no reads outside the session).
+
+### Untrusted input handling
+
+`guest_display_name` and all community-published text/URL fields (`youtube_url`, image URLs, `instructions`, `notes`) are untrusted and cross into other users' apps or the host's authenticated checkout UI.
+
+- **URL allowlist:** `youtube_url` must match an `https://` YouTube allowlist (`youtube.com` / `youtu.be`); reject `javascript:`, `data:`, and plain `http:`. Image URLs must be `https:` only.
+- **Length + charset caps:** Server-side length caps and control-character stripping on `guest_display_name` and all community text.
+- **Rendering rule:** Untrusted fields render only in plain React Native `Text`. They must never be passed to a `WebView` or an HTML/markdown renderer without explicit sanitization. (RN `Text` does not interpret HTML, so the residual risk is URL-scheme abuse via `Linking.openURL` — hence the allowlist.)
+
+### Community content abuse model (Phase 6)
+
+Reactive moderation only becomes safe when hiding is enforced server-side:
+
+- **Server-side hiding:** Flagged/hidden recipes are filtered by RLS or a server view and never sent to clients — client-side hiding is bypassable and does not count.
+- **Flag integrity:** Flag inserts are deduplicated per user so no single actor inflates a count, and no small group can suppress legitimate content.
+- **Fast path:** A report category for illegal content triggers single-flag review with a stated takedown SLA, rather than waiting for a threshold.
+- **Publish rate limit:** Per-user publish throttle to prevent spam flooding.
+
+### RLS ownership
+
+Under the app-operated model, **the app author owns all RLS policies, quotas, and abuse response** — not the end user. (The post-v1 self-hosted option is the only case where RLS becomes the operator-user's responsibility.) Per-user sync-table policies (`user_id = auth.uid()`, both `USING` and `WITH CHECK`) already ship in `supabase-sync-schema.sql`; `community_recipes` and `cart_sessions` policies must be authored before those features ship.
 
 ---
 
@@ -148,12 +204,16 @@ Milestone numbers below refer to **product intent**, not the archived Next.js co
 #### Feature 1.2: Cart & grocery list (v1)
 
 - Add meals to a cart; floating cart / badge mirroring delivery-app patterns.
+- Assign any cart row to a household member (“For: Alex”); assignment persisted in `cart_lines.member_id`.
 - Checkout generates a **consolidated grocery list**: combined deduplicated checklist and by-meal grouped view.
+- By-meal view shows **”For: [name]”** attribution under each assigned meal section header; member name is snapshotted at checkout so the list stays stable even if a member is later renamed or deleted.
 
-#### Feature 1.3: Household meal planning (v1)
+#### Feature 1.3: Household member management (v1)
 
-- Households that enable sync share favorites, custom recipes, history, leftovers, and planning-related state per **`sync-protocol.md`**.
-- Cook sees merged contributions with attribution where the data model supports it; explicit “ready to generate list” flow (exact UX TBD in **`ux-screens.md`**).
+- Manage named household members in Settings (add, rename, delete); stored locally, no account required.
+- Members are used to assign cart rows and attribute grocery list sections (see Feature 1.2).
+
+**Shared household sync** — group invites, multi-device cart merging, “ready to shop” UX — ships in **Phase 9 (Household Sync)**; see `sync-protocol.md`. **Group ordering link** (CartSession, SessionLink, guest additions) ships in **Phase 10 (Group Ordering)**.
 
 #### Feature 1.4: “What do you feel like?” Questionnaire (v1)
 
@@ -224,7 +284,8 @@ Use [`priorities.md`](../forkit-source/docs/priorities.md) as the weighted decis
 ## Constraints
 
 - **No monetization** in this product vision; personal/household use focus.
-- **No author-operated** multi-tenant backend required for core features; optional **user-supplied** sync and API keys only.
+- **Offline core needs no backend.** All core features (browse, search, questionnaire, cart, checkout, grocery list, favorites, history, leftovers, savings, custom recipes, local household members) work fully offline with no account and no network. This is a hard requirement.
+- **Networked features run on author-operated Supabase.** Household sync (Phase 9), community recipes (Phase 6), and group ordering sessions (Phase 10) are multi-tenant surfaces the app author operates and secures — the author owns RLS, quotas, and abuse response (see [Security & trust boundaries](#security--trust-boundaries)). A **user-supplied / self-hosted** Supabase remains an optional post-v1 advanced mode. External recipe API keys are always user-configured and stored only in device secure storage.
 - **App stores:** iOS and Android distribution is **in scope** for the mobile product (subject to store policies and the owner’s publishing choices).
 - Prefer a **thin, understandable** data layer: two SQLite databases, clear adapters, no unnecessary abstraction depth.
 - UI implementation follows React Native / Expo idioms (platform-appropriate components, React Navigation patterns). This spec does not mandate specific component libraries.
@@ -233,7 +294,6 @@ Use [`priorities.md`](../forkit-source/docs/priorities.md) as the weighted decis
 
 - Social graph, public feeds, or influencer-style sharing.
 - Nutrition tracking as a primary product (ingredient validation may enable hints later).
-- **Author-run** global recipe hosting or account system.
 
 ForkIt **does** include **grocery list generation in v1** (see above), even though generic “shopping list product” features may stay minimal until later iterations.
 
