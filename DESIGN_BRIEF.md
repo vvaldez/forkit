@@ -48,7 +48,22 @@ The icon needs to work as a small square glyph on a home screen. It should commu
 - Plate with food illustration — too detailed for icon sizes
 - Knife + fork crossed — generic and overdone
 
-**Mood words:** bold, friendly, a little sarcastic, home kitchen, weeknight dinner
+**Mood words:** bold, friendly, a little sarcastic, home kitchen, weeknight dinner, quietly defiant
+
+### Locked direction: offset-tine fork (approved 2026-07-05, revised same day)
+
+An earlier draft of this section locked a "bent-tine fork" direction — outer tines curled inward around a raised center tine, meant to suggest a fist. Rendered at full size, it read as exactly that: a hand, not a fork with a wink. Any three-tine silhouette with a raised, flanked center tine reads as that gesture regardless of how gently the outer tines are curled — the gesture's silhouette *is* "center raised, sides curled in," so softening the curl doesn't fix it. That direction is dropped.
+
+The revised direction keeps the wink but removes the shape that caused the problem: four straight tines, no curls, no fist-like flanking. One tine — off-center, not the middle one — stands slightly taller than the other three. Nothing in the glyph resembles a hand: no curled "fingers," no symmetric raise around a center point.
+
+- Four straight, evenly-spaced tines, rounded caps, standard crossbar and handle — an ordinary fork silhouette.
+- The third tine from the left (i.e., **not** the middle tine, and not symmetric) is modestly taller than the other three. That's the only departure from a plain fork.
+- White glyph, centered, on solid brand red (`#E8474C`) background.
+- Must hold up at 60px and below — at that size the asymmetry may not be visible at all, which is acceptable; it should never be pushed further just to make it visible (see trade-off below).
+
+**Known trade-off:** this device is subtle to the point that most people will just perceive "a fork" and never consciously register the asymmetry as intentional — it's a quiet in-joke, not a wink anyone is expected to catch. That's the accepted trade for safety: the moment the offset tine is emphasized enough to actually register as a deliberate statement, it starts drifting back toward an emphasized-center-tine read, which is the shape that got the previous direction rejected. Do not "fix" the subtlety by making the tall tine center-positioned or by adding any curl — both routes lead back to the rejected shape.
+
+This is the direction to execute for the store-release icon. Options A–C below are the exploration record that led here — kept for context, not competing proposals.
 
 ### Platform specifications
 
@@ -78,7 +93,7 @@ Option C — Fork breaking a delivery bag:
 - More illustrative; riskier at small sizes
 - Only pursue if it reads clearly at 60px
 
-Deliver all three as proposals before finalizing.
+These were the exploration options; the locked direction above (bent-tine fork) is what to execute at full fidelity for the store release.
 
 ---
 
