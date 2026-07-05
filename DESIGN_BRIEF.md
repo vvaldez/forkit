@@ -48,7 +48,21 @@ The icon needs to work as a small square glyph on a home screen. It should commu
 - Plate with food illustration — too detailed for icon sizes
 - Knife + fork crossed — generic and overdone
 
-**Mood words:** bold, friendly, a little sarcastic, home kitchen, weeknight dinner
+**Mood words:** bold, friendly, a little sarcastic, home kitchen, weeknight dinner, quietly defiant
+
+### Locked direction: bent-tine fork (approved 2026-07-05)
+
+The icon is a bold, near-abstract fork silhouette on brand red. The two outer tines curl inward and down — like fingers closing into a fist — while the center tine stands alone, tall and straight. At a glance it's an ordinary fork icon. On a second look, it's a little more pointed. That's the whole idea: **"fork the man, fork the fees"** energy, subtle enough that nobody could reasonably flag it.
+
+- Silhouette stays unmistakably fork-shaped — four tines, a crossbar, a handle. Nothing in the glyph is anatomically a hand or gesture on its own; only a fork with two bent tines.
+- The two outer tines bend into short inward curls rather than standing straight — the only departure from a literal fork.
+- Center tine is thicker and taller than the others, so it reads as the focal point.
+- White glyph, centered, on solid brand red (`#E8474C`) background — same treatment as the base "bold fork on red" direction.
+- Must hold up at 60px and below: the curl should read as "stylized fork," not as visual noise, at notification-icon size.
+
+**Why this over a literal hand/fist:** an icon that reads as a hand or fist first risks App Store / Play Store review friction — a possible age-rating bump or rejection for an implied gesture. A fork silhouette with two curled tines carries the same energy for anyone looking for it, without giving a reviewer or an automated scan anything explicit to flag.
+
+This is the direction to execute for the store-release icon. Options A–C below are the exploration record that led here — kept for context, not competing proposals.
 
 ### Platform specifications
 
@@ -78,7 +92,7 @@ Option C — Fork breaking a delivery bag:
 - More illustrative; riskier at small sizes
 - Only pursue if it reads clearly at 60px
 
-Deliver all three as proposals before finalizing.
+These were the exploration options; the locked direction above (bent-tine fork) is what to execute at full fidelity for the store release.
 
 ---
 
