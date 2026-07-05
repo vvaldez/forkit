@@ -40,7 +40,7 @@ The app is **offline-first**: core features work with no account and no internet
 
 **Tone:** Confident, a little cheeky. For regular home cooks who want to stop staring at the fridge. Not a chef's tool — a weeknight dinner tool.
 
-**App icon concept:** A bold stylized fork on brand red — four tines, but the outer two curl inward like a closing fist around a single raised center tine. Reads as an ordinary fork at a glance; a little more pointed on a second look. Avoid delivery bags, chef's hats, or crossed knife-and-fork.
+**App icon concept:** A bold stylized fork on brand red — four straight tines, one (off-center, not the middle) standing slightly taller than the rest. Reads as an ordinary fork at any size; the asymmetry is a quiet in-joke, not a gesture. Avoid delivery bags, chef's hats, or crossed knife-and-fork.
 
 See [`DESIGN_BRIEF.md`](./DESIGN_BRIEF.md) for full icon specs, tab bar icon specs, empty states, and color palette.
 

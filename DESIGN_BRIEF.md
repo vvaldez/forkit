@@ -50,17 +50,18 @@ The icon needs to work as a small square glyph on a home screen. It should commu
 
 **Mood words:** bold, friendly, a little sarcastic, home kitchen, weeknight dinner, quietly defiant
 
-### Locked direction: bent-tine fork (approved 2026-07-05)
+### Locked direction: offset-tine fork (approved 2026-07-05, revised same day)
 
-The icon is a bold, near-abstract fork silhouette on brand red. The two outer tines curl inward and down — like fingers closing into a fist — while the center tine stands alone, tall and straight. At a glance it's an ordinary fork icon. On a second look, it's a little more pointed. That's the whole idea: **"fork the man, fork the fees"** energy, subtle enough that nobody could reasonably flag it.
+An earlier draft of this section locked a "bent-tine fork" direction — outer tines curled inward around a raised center tine, meant to suggest a fist. Rendered at full size, it read as exactly that: a hand, not a fork with a wink. Any three-tine silhouette with a raised, flanked center tine reads as that gesture regardless of how gently the outer tines are curled — the gesture's silhouette *is* "center raised, sides curled in," so softening the curl doesn't fix it. That direction is dropped.
 
-- Silhouette stays unmistakably fork-shaped — four tines, a crossbar, a handle. Nothing in the glyph is anatomically a hand or gesture on its own; only a fork with two bent tines.
-- The two outer tines bend into short inward curls rather than standing straight — the only departure from a literal fork.
-- Center tine is thicker and taller than the others, so it reads as the focal point.
-- White glyph, centered, on solid brand red (`#E8474C`) background — same treatment as the base "bold fork on red" direction.
-- Must hold up at 60px and below: the curl should read as "stylized fork," not as visual noise, at notification-icon size.
+The revised direction keeps the wink but removes the shape that caused the problem: four straight tines, no curls, no fist-like flanking. One tine — off-center, not the middle one — stands slightly taller than the other three. Nothing in the glyph resembles a hand: no curled "fingers," no symmetric raise around a center point.
 
-**Why this over a literal hand/fist:** an icon that reads as a hand or fist first risks App Store / Play Store review friction — a possible age-rating bump or rejection for an implied gesture. A fork silhouette with two curled tines carries the same energy for anyone looking for it, without giving a reviewer or an automated scan anything explicit to flag.
+- Four straight, evenly-spaced tines, rounded caps, standard crossbar and handle — an ordinary fork silhouette.
+- The third tine from the left (i.e., **not** the middle tine, and not symmetric) is modestly taller than the other three. That's the only departure from a plain fork.
+- White glyph, centered, on solid brand red (`#E8474C`) background.
+- Must hold up at 60px and below — at that size the asymmetry may not be visible at all, which is acceptable; it should never be pushed further just to make it visible (see trade-off below).
+
+**Known trade-off:** this device is subtle to the point that most people will just perceive "a fork" and never consciously register the asymmetry as intentional — it's a quiet in-joke, not a wink anyone is expected to catch. That's the accepted trade for safety: the moment the offset tine is emphasized enough to actually register as a deliberate statement, it starts drifting back toward an emphasized-center-tine read, which is the shape that got the previous direction rejected. Do not "fix" the subtlety by making the tall tine center-positioned or by adding any curl — both routes lead back to the rejected shape.
 
 This is the direction to execute for the store-release icon. Options A–C below are the exploration record that led here — kept for context, not competing proposals.
 
